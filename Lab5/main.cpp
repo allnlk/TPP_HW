@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <optional>
+#include <string>
 
 int main()
 {
@@ -16,6 +17,16 @@ int main()
     const float inclineLength = 600.f;             // довжина площини
     const sf::Vector2f inclineStart{100.f, 150.f}; // верхній край площини
     const float bodyWidth = 50.f;
+
+    // Шрифт і текст
+    sf::Font font;
+    if (!font.openFromFile("../resources/fonts/arial.ttf"))
+    {
+        return 1;
+    }
+    sf::Text infoText(font, "", 20);
+    infoText.setFillColor(sf::Color::White);
+    infoText.setPosition({20.f, 20.f});
 
     // Підлога
     sf::RectangleShape ground({800.f, 50.f});
@@ -55,10 +66,10 @@ int main()
 
         // Оновлення фізичної моделі
         float dt = clock.restart().asSeconds();
+        float a = gravity * std::sin(angleRad);  // a = g * sin(alpha)
 
         if (!finished)
         {
-            float a = gravity * std::sin(angleRad);  // a = g * sin(alpha)
             velocity += a * dt;
             s += velocity * dt;
             time += dt;
@@ -81,11 +92,21 @@ int main()
             inclineStart.y + s * std::sin(angleRad)
         });
 
+        // Текст з параметрами
+        infoText.setString(
+            "Angle: " + std::to_string(angleDeg) +
+            "\nAcceleration: " + std::to_string(a) +
+            "\nVelocity: " + std::to_string(velocity) +
+            "\nDistance: " + std::to_string(s - startS) +
+            "\nTime: " + std::to_string(time)
+        );
+
         // Відображення
         window.clear(sf::Color::Black);
         window.draw(ground);
         window.draw(incline);
         window.draw(body);
+        window.draw(infoText);
         window.display();
     }
     return 0;
