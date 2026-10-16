@@ -4,14 +4,17 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <vector>
 
 // ---------- Константи ----------
 const float PI = 3.14159265f;
 const float GRAVITY = 980.f;                       // прискорення вільного падіння
 const float INCLINE_LENGTH = 600.f;                // довжина площини
 const float BODY_WIDTH = 50.f;                     // ширина тіла
+const float BODY_HEIGHT = 30.f;                    // висота тіла
 const float START_S = 50.f;                        // початкове положення на площині
 const sf::Vector2f INCLINE_START{100.f, 150.f};    // верхній край площини
+const std::size_t MAX_TRAJECTORY_POINTS = 500;     // обмеження кількості точок
 
 // ---------- Фізична модель ----------
 struct Model
@@ -23,11 +26,33 @@ struct Model
     float time = 0.f;        // час руху
     bool running = false;    // чи йде моделювання
     bool finished = false;   // чи дійшло тіло до кінця площини
+    std::vector<sf::Vector2f> trajectory; // точки траєкторії (центр тіла)
 };
 
 float acceleration(const Model& m)
 {
     return GRAVITY * std::sin(m.angleDeg * PI / 180.f);  // a = g * sin(alpha)
+}
+
+// Точка на поверхні площини, де стоїть тіло
+sf::Vector2f bodyPosition(const Model& m)
+{
+    float angleRad = m.angleDeg * PI / 180.f;
+    return {
+        INCLINE_START.x + m.s * std::cos(angleRad),
+        INCLINE_START.y + m.s * std::sin(angleRad)
+    };
+}
+
+// Центр тіла: зсув від поверхні на пів висоти перпендикулярно до площини
+sf::Vector2f bodyCenter(const Model& m)
+{
+    float angleRad = m.angleDeg * PI / 180.f;
+    sf::Vector2f p = bodyPosition(m);
+    return {
+        p.x + (BODY_HEIGHT / 2.f) * std::sin(angleRad),
+        p.y - (BODY_HEIGHT / 2.f) * std::cos(angleRad)
+    };
 }
 
 void resetModel(Model& m)
@@ -37,6 +62,7 @@ void resetModel(Model& m)
     m.time = 0.f;
     m.running = false;
     m.finished = false;
+    m.trajectory.clear();
 }
 
 // ---------- Оброблення введення ----------
@@ -105,6 +131,13 @@ void updatePhysics(Model& m, float dt)
         std::cout << "Час (чисельно): " << m.time << " c\n";
         std::cout << "Час (теорія):   " << tTheory << " c\n\n";
     }
+
+    // Траєкторія
+    m.trajectory.push_back(bodyCenter(m));
+    if (m.trajectory.size() > MAX_TRAJECTORY_POINTS)
+    {
+        m.trajectory.erase(m.trajectory.begin());
+    }
 }
 
 // ---------- Відображення ----------
@@ -113,12 +146,14 @@ struct Scene
     sf::RectangleShape ground;
     sf::RectangleShape incline;
     sf::RectangleShape body;
+    sf::VertexArray trajectoryLine;
     sf::Text info;
 
     explicit Scene(const sf::Font& font)
         : ground({800.f, 50.f}),
           incline({INCLINE_LENGTH, 20.f}),
-          body({BODY_WIDTH, 30.f}),
+          body({BODY_WIDTH, BODY_HEIGHT}),
+          trajectoryLine(sf::PrimitiveType::LineStrip),
           info(font, "", 20)
     {
         ground.setFillColor(sf::Color(100, 100, 100));
@@ -128,7 +163,7 @@ struct Scene
         incline.setPosition(INCLINE_START);
 
         body.setFillColor(sf::Color::White);
-        body.setOrigin({BODY_WIDTH / 2.f, 30.f});  // середина нижньої сторони
+        body.setOrigin({BODY_WIDTH / 2.f, BODY_HEIGHT});  // середина нижньої сторони
 
         info.setFillColor(sf::Color::White);
         info.setPosition({20.f, 20.f});
@@ -137,14 +172,16 @@ struct Scene
 
 void drawScene(sf::RenderWindow& window, Scene& sc, const Model& m)
 {
-    float angleRad = m.angleDeg * PI / 180.f;
-
     sc.incline.setRotation(sf::degrees(m.angleDeg));
     sc.body.setRotation(sf::degrees(m.angleDeg));
-    sc.body.setPosition({
-        INCLINE_START.x + m.s * std::cos(angleRad),
-        INCLINE_START.y + m.s * std::sin(angleRad)
-    });
+    sc.body.setPosition(bodyPosition(m));
+
+    // Лінія траєкторії
+    sc.trajectoryLine.clear();
+    for (const auto& point : m.trajectory)
+    {
+        sc.trajectoryLine.append(sf::Vertex{point, sf::Color::Yellow});
+    }
 
     std::string status = m.finished ? "Finished" : (m.running ? "Running" : "Paused");
 
@@ -163,6 +200,7 @@ void drawScene(sf::RenderWindow& window, Scene& sc, const Model& m)
     window.clear(sf::Color::Black);
     window.draw(sc.ground);
     window.draw(sc.incline);
+    window.draw(sc.trajectoryLine);   // траєкторія поверх площини, під тілом
     window.draw(sc.body);
     window.draw(sc.info);
     window.display();
@@ -190,8 +228,8 @@ int main()
     {
         float dt = clock.restart().asSeconds();
 
-        handleInput(window, model);   // 1. Оброблення подій
-        updatePhysics(model, dt);     // 2. Оновлення фізичної моделі
+        handleInput(window, model);      // 1. Оброблення подій
+        updatePhysics(model, dt);        // 2. Оновлення фізичної моделі
         drawScene(window, scene, model); // 3. Відображення сцени
     }
     return 0;
