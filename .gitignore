@@ -1,1 +1,10 @@
 *.exe
+build/
+vcpkg_installed/
+.vscode/
+.DS_Store
+
+build/
+vcpkg_installed/
+.vscode/
+.DS_Store
