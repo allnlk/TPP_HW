@@ -190,6 +190,7 @@ void drawScene(sf::RenderWindow& window, Scene& sc, const Model& m)
         "\nAcceleration: " + std::to_string(acceleration(m)) +
         "\nInitial velocity: " + std::to_string(m.v0) +
         "\nVelocity: " + std::to_string(m.velocity) +
+        "\nPosition: " + std::to_string(m.s) +
         "\nDistance: " + std::to_string(m.s - START_S) +
         "\nTime: " + std::to_string(m.time) +
         "\nStatus: " + status +
