@@ -10,9 +10,9 @@ int main()
     );
 
     const float PI = 3.14159265f;
-    const float angleDeg = 30.f;                  // кут нахилу
+    const float angleDeg = 30.f;                   // кут нахилу
     const float angleRad = angleDeg * PI / 180.f;
-    const float inclineLength = 600.f;            // довжина площини
+    const float inclineLength = 600.f;             // довжина площини
     const sf::Vector2f inclineStart{100.f, 150.f}; // верхній край площини
 
     // Підлога
@@ -32,10 +32,11 @@ int main()
     body.setFillColor(sf::Color::White);
     body.setOrigin({25.f, 30.f}); // середина нижньої сторони
     body.setRotation(sf::degrees(angleDeg));
-    body.setPosition({
-        inclineStart.x + s * std::cos(angleRad),
-        inclineStart.y + s * std::sin(angleRad)
-    });
+
+    // Фізична модель
+    float velocity = 0.f;          // швидкість вздовж площини
+    const float gravity = 980.f;   // прискорення вільного падіння
+    sf::Clock clock;
 
     while (window.isOpen())
     {
@@ -47,6 +48,18 @@ int main()
             }
         }
 
+        // Оновлення фізичної моделі
+        float dt = clock.restart().asSeconds();
+        float a = gravity * std::sin(angleRad);  // a = g * sin(alpha)
+        velocity += a * dt;
+        s += velocity * dt;
+
+        body.setPosition({
+            inclineStart.x + s * std::cos(angleRad),
+            inclineStart.y + s * std::sin(angleRad)
+        });
+
+        // Відображення
         window.clear(sf::Color::Black);
         window.draw(ground);
         window.draw(incline);
