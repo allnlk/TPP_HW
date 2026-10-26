@@ -8,3 +8,13 @@ build/
 vcpkg_installed/
 .vscode/
 .DS_Store
+
+# Lab6: скомпільовані програми (без розширення)
+Lab6/part1_race/race
+Lab6/part1_race/mutex
+Lab6/part1_race/atomic
+Lab6/part2_deadlock/deadlock
+Lab6/part2_deadlock/scoped_lock
+Lab6/part2_deadlock/ordered
+Lab6/part3_producer_consumer/surveillance
+Lab6/part4_async/async_sum
