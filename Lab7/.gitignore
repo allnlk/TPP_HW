@@ -1,0 +1,5 @@
+out/
+build/
+vcpkg_installed/
+.vscode/
+.DS_Store

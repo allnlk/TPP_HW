@@ -1,0 +1,26 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "mac-debug",
+      "displayName": "macOS arm64 Debug (vcpkg)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "mac-debug", "configurePreset": "mac-debug" }
+  ],
+  "testPresets": [
+    {
+      "name": "mac-debug",
+      "configurePreset": "mac-debug",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
