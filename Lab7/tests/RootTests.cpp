@@ -233,3 +233,20 @@ TEST(RootFindingTest, BisectionThrowsOnEmptyFunction)
     Function empty;
     EXPECT_THROW(bisection(empty, 0.0, 1.0, 1e-9, 100), std::invalid_argument);
 }
+
+// residual(): абсолютне значення f(x)
+TEST(RootFindingTest, ResidualReturnsAbsoluteValue)
+{
+    EXPECT_NEAR(residual(f, 1.0), 1.0, 1e-12);                 // |1 - 2| = 1
+    EXPECT_NEAR(residual(f, std::sqrt(2.0)), 0.0, 1e-12);      // у корені
+}
+
+// residual(): некоректні вхідні дані
+TEST(RootFindingTest, ResidualThrowsOnInvalidInput)
+{
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    auto nanFunc = [](double) { return std::numeric_limits<double>::quiet_NaN(); };
+
+    EXPECT_THROW(residual(f, nan), std::invalid_argument);
+    EXPECT_THROW(residual(nanFunc, 1.0), std::domain_error);
+}

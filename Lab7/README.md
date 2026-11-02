@@ -95,7 +95,22 @@ Program continues normally.
 тому `[EXIT ] level3` з'являється раніше за `[LOG]`. Після `throw;` знищується
 `level2`, далі `level1`, і лише тоді обробник у `main()` отримує керування.
 
-**Фактичний результат:** _(вставити після запуску `RootDemo`, Part 2; порівняти з очікуваним)_
+**Фактичний результат** (запуск `RootDemo`, Part 2):
+
+```
+[ENTER] level1
+[ENTER] level2
+[ENTER] level3
+Computing roots on interval without sign change...
+[EXIT ] level3
+[LOG] level2 caught: No sign change on interval
+[EXIT ] level2
+[EXIT ] level1
+[MAIN] NoSignChangeException: No sign change on interval (f(a)=2, f(b)=7)
+Program continues normally.
+```
+
+Фактичний результат збігається з очікуваним.
 
 ## Антипатерни: висновок
 
@@ -111,4 +126,27 @@ Program continues normally.
 
 ## Негативний самоконтроль
 
-_(заповнюється на наступному кроці)_
+У `RootFindingTask::computeRoots()` одразу після виклику `bisection(...)` було тимчасово додано рядок
+
+```cpp
+results_ = RootResults{bisectionRoot, 0.0, 0.0, 0.0}; // INTENTIONAL BUG
+```
+
+Він змінює збережений стан до завершення всіх обчислень, тобто порушує сильну гарантію.
+
+Результат запуску тестів: пройдено 25 тестів, **не пройдено 1**:
+`RootFindingTaskTest.ComputeRootsPreservesResultsWhenSecondMethodFails`.
+
+```
+Expected equality of these values:
+  task.results().newtonRoot       Which is: 0
+  before.newtonRoot               Which is: 1.4142135623730951
+```
+
+Причина: бісекція завершилась успішно й записала результат, потім метод Ньютона
+кинув `ZeroDerivativeException`, але стан об'єкта вже було змінено. Виняток правильного
+типу виник, тому перевірка `EXPECT_THROW` пройшла; помилку виявила саме перевірка
+збереження стану після винятку.
+
+Після відновлення правильної реалізації (`git checkout -- src/RootFindingTask.cpp`)
+усі тести пройдено.
