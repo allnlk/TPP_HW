@@ -212,3 +212,24 @@ TEST(RootFindingTaskTest, RootOnIntervalBoundary)
     EXPECT_DOUBLE_EQ(task.results().bisectionRoot, 1.0);
     EXPECT_NEAR(task.results().newtonRoot, 1.0, 1e-8);
 }
+
+// Нульовий знаменник у методі січних
+TEST(RootFindingTest, SecantThrowsOnZeroDenominator)
+{
+    auto constant = [](double) { return 1.0; };
+    EXPECT_THROW(secant(constant, 1.0, 2.0, 1e-9, 50), ZeroDerivativeException);
+}
+
+// Функція повернула NaN -> std::domain_error
+TEST(RootFindingTest, BisectionThrowsWhenFunctionReturnsNaN)
+{
+    auto nanFunc = [](double) { return std::numeric_limits<double>::quiet_NaN(); };
+    EXPECT_THROW(bisection(nanFunc, 0.0, 1.0, 1e-9, 100), std::domain_error);
+}
+
+// Порожня функція -> std::invalid_argument
+TEST(RootFindingTest, BisectionThrowsOnEmptyFunction)
+{
+    Function empty;
+    EXPECT_THROW(bisection(empty, 0.0, 1.0, 1e-9, 100), std::invalid_argument);
+}
