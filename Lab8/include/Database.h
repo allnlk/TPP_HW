@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <string>
 
 #include <sqlite_orm/sqlite_orm.h>
@@ -42,7 +43,14 @@ using DbStorage = decltype(createStorage(""));
 // та синхронізує схему бази даних.
 inline void configureStorage(DbStorage& storage)
 {
+    storage.on_open = [](sqlite3* db)
+    {
+        if (sqlite3_exec(db, "PRAGMA foreign_keys = ON;",
+                         nullptr, nullptr, nullptr) != SQLITE_OK)
+        {
+            throw std::runtime_error("Cannot enable foreign key constraints");
+        }
+    };
     storage.open_forever();
-    storage.pragma.foreign_keys(true);
     storage.sync_schema();
 }

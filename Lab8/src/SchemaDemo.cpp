@@ -11,13 +11,6 @@ void printTableInfo(DbStorage& storage, const std::string& table)
 {
     std::cout << "Table " << table << " exists: " << std::boolalpha
               << storage.table_exists(table) << '\n';
-
-    for (const auto& column : storage.table_info(table))
-    {
-        std::cout << "  " << column.name << " " << column.type
-                  << " notnull=" << static_cast<int>(column.notnull)
-                  << " pk=" << column.pk << '\n';
-    }
 }
 }
 
